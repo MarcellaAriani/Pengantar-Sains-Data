@@ -1,0 +1,447 @@
+---
+title: Analisis Pengelompokan Penduduk di Indonesia berdasarkan Jumlah dan Persentase
+  Penduduk, Laju Pertumbuhan Penduduk, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk
+  Menurut Provinsi pada Tahun 2024 dengan   menggunakan Hierarchical Clustering in
+  R
+author: "Marcella Ariani (20254920003)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: journal
+    css: pink.css
+    toc: true
+    toc_float: true
+---
+
+![](https://cdn.cloudinary.com/dexk7lfdc/image/upload/v1762246754/FA_Logo-Matana-University-_2_-copy-new_t80ina.png)
+
+Laporan ini berisi analisis mengenai Penduduk Indonesia berdasarkan Jumlah dan Persentase Penduduk, Laju Pertumbuhan, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk Menurut Provinsi pada tahun 2024. Analisis ini mencakup Statistika Deskriptif, Visualisasi Deskriptif, dan Analisis Cluster Hirarki.
+
+Tujuan saya dalam menganalisis penduduk di Indonesia pada tahun 2024 karena rasa keingintahuan saya terhadap jumlah/populasi penduduk terbanyak di Indonesia. Tidak hanya itu, tujuan lainnya adalah untuk mengetahui provinsi mana yang paling padat jumlah penduduknya, laju pertumbuhan penduduk, dan rasio jenis kelamin. 
+
+Data ini diambil dari Badan Pusat Statistik (BPS): [Sumber Data: Kependudukan di Indonesia 2024](https://www.bps.go.id/id/statistics-table/3/V1ZSbFRUY3lTbFpEYTNsVWNGcDZjek53YkhsNFFUMDkjMw%253D%253D/penduduk--laju-pertumbuhan-penduduk--distribusi-persentase-penduduk--kepadatan-penduduk--rasio-jenis-kelamin-penduduk-menurut-provinsi--2024.html?year=2024)
+
+# 1. Import Library
+```{r message=FALSE, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(factoextra)
+library(dendextend)
+```
+
+#### Disini saya menggunakan beberapa packages, seperti:
+##### library(readxl) : membaca data/file dari excel, 
+##### library(dplyr) : pengolahan data, 
+##### library(ggplot2) : memvisualisasi data (grafik) secara profesional, 
+##### library(cluster) : analisis klaster (clustering),
+##### library(factoextra) : visualisasi dan interprestasi hasil analisis multivariat, dan
+##### library(dendextend) : memanipulasi dan mempercantik dendogram. 
+
+
+# 2. Import Data BPS
+```{r}
+Penduduk_2024 <- read_excel("C:/Users/Marcella/OneDrive/Tugas Kampus/Pengantar Sains Data/Penduduk, Laju Pertumbuhan Penduduk, Distribusi Persentase Penduduk, Kepadatan Penduduk, Rasio Jenis Kelamin Penduduk Menurut Provinsi, 2024.xlsx")
+```
+
+#### Import data 
+
+```{r}
+# Cek struktur data
+str(Penduduk_2024)
+head(Penduduk_2024)
+```
+
+# 3. Statistik Deskriptif
+```{r}
+summary(Penduduk_2024)
+```
+#### Dari hasil statistika deskriptif diatas, memperlihatkan nilai minimal, kuartil 1, median, mean, kuartil 3, dan nilai maksimal pada setiap variabel.
+
+# 4. Visualisasi Deskriptif
+```{r}
+colnames(Penduduk_2024)
+```
+
+## BAR CHART TIAP VARIABEL
+### Bar Chart: Jumlah Penduduk per Provinsi 
+```{r}
+ggplot(Penduduk_2024, aes(
+  x = reorder(Provinsi, `Jumlah Penduduk (Ribu)`),
+  y = `Jumlah Penduduk (Ribu)`
+)) +
+  geom_bar(stat = "identity", fill = "#ff9ecb") + 
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Jumlah Penduduk per Provinsi (2024)",
+    x = "Provinsi",
+    y = "Jumlah Penduduk (Ribu Jiwa)"
+  )
+
+```
+
+#### Dari visualisasi bar chart diatas, menunjukkan bahwa Jumlah Penduduk di Indonesia pada tahun 2024 paling banyak ada di provinsi Jawa Barat. Sedangkan Jumlah Penduduk di Indonesia paling sedikit di provinsi Papua Selatan.
+
+### Bar Chart: Laju Pertumbuhan Penduduk 
+```{r}
+ggplot(Penduduk_2024, aes(
+  x = reorder(Provinsi, `Laju Pertumbuhan Penduduk per Tahun`),
+  y = `Laju Pertumbuhan Penduduk per Tahun`  
+)) +
+  geom_bar(stat = "identity", fill = "#ff9ecb") + 
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Laju Pertumbuhan Penduduk per Tahun (2024)",
+    x = "Provinsi",
+    y = "Laju Pertumbuhan Penduduk" 
+  )
+
+```
+
+#### Dari visualisasi bar chart diatas, menunjukkan bahwa Pertumbuhan Penduduk di Indonesia pada tahun 2024 paling banyak ada di provinsi Kalimantan Timur. Sedangkan Pertumbuhan Penduduk di Indonesia paling sedikit ada di provinsi DKI Jakarta.
+
+
+### Bar Chart: Kepadatan Penduduk  
+```{r}
+ggplot(Penduduk_2024, aes(
+  x = reorder(Provinsi, `Kepadatan Penduduk per km persegi (Km2)`),
+  y = `Kepadatan Penduduk per km persegi (Km2)`  
+)) +
+  geom_bar(stat = "identity", fill = "#ff9ecb") + 
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Kepadatan Penduduk (2024)",
+    x = "Provinsi",
+    y = "Kepadatan Penduduk" 
+  )
+```
+
+#### Dari visualisasi bar chart diatas, menunjukkan bahwa Kepadatan Penduduk di Indonesia pada tahun 2024 paling banyak ada di provinsi DKI Jakarta. Sedangkan Kepadatan Penduduk di Indonesia paling sedikit ada pada beberapa provinsi, yaitu Provinsi Papua, Kalimantan Utara, Papua Barat, dan Papua Selatan.
+
+### Bar Chart: Rasio Jenis Kelamin
+```{r}
+ggplot(Penduduk_2024, aes(
+  x = reorder(Provinsi, `Rasio Jenis Kelamin Penduduk`),
+  y = `Rasio Jenis Kelamin Penduduk`  
+)) +
+  geom_bar(stat = "identity", fill = "#ff9ecb") + 
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Rasio Jenis Kelamin (2024)",
+    x = "Provinsi",
+    y = "Rasio Jenis Kelamin" 
+  )
+```
+
+#### Dari visualisasi bar chart diatas, menunjukkan bahwa Rasio Jenis Kelamin di Indonesia pada tahun 2024 paling banyak ada di provinsi Papua Pengunungan. Sedangkan Rasio Jenis Kelamin di Indonesia paling sedikit ada di provinsi DI Yogyakarta.
+
+## PIE CHART TIAP VARIABEL 
+```{r}
+data_penduduk <- Penduduk_2024
+
+data_penduduk <- data_penduduk %>%
+  mutate(
+    Wilayah = case_when(
+      Provinsi %in% c("DKI Jakarta", "Jawa Barat", "Jawa Tengah",
+                      "DI Yogyakarta", "Jawa Timur", "Banten") ~ "Pulau Jawa",
+      
+      Provinsi %in% c("Aceh", "Sumatera Utara", "Sumatera Barat",
+                      "Riau", "Jambi", "Sumatera Selatan",
+                      "Bengkulu", "Lampung", "Kepulauan Riau",
+                      "Kepulauan Bangka Belitung") ~ "Pulau Sumatera",
+      
+      TRUE ~ "Luar Jawa"
+    )
+  )
+```
+
+#### Disini saya membagi 3 kategori, yaitu Pulau Jawa, Luar Jawa, dan Pulau Sumatera agar Pie Chart dapat dilihat dengan baik. 
+
+```{r}
+buat_pie_3wilayah <- function(indikator_nama) {
+  
+  df <- data_penduduk %>%
+    group_by(Wilayah) %>%
+    summarise(Nilai = sum(.data[[indikator_nama]], na.rm = TRUE)) %>%
+    mutate(
+      Persen = Nilai / sum(Nilai) * 100,
+      label = paste0(round(Persen, 1), "%")  
+    )
+  
+  ggplot(df, aes(x = "", y = Persen, fill = Wilayah)) +
+    geom_bar(stat = "identity", width = 1, color = "white") +
+    coord_polar("y") +
+    
+    scale_fill_manual(values = c("#e8dff5", "#ffa6c9", "#daeaf6")) +
+    
+    # Teks persentase 
+    geom_text(aes(label = label), 
+              position = position_stack(vjust = 0.5),
+              color = "white", size = 5, fontface = "bold") +
+    
+    labs(
+      title = paste("Pie Chart -", indikator_nama),
+      fill = "Wilayah"
+    ) +
+    theme_void() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 16, face = "bold")
+    )
+}
+```
+
+#### Membagi 3 kategori dengan 3 warna pastel yang berbeda. Pulau Jawa Ditandai dengan warna Carnation , Luar Jawa dengan warna Soft Lilac, dan Pulau Sumatera dengan warna Baby Blue. 
+
+### Pie Chart: Jumlah Penduduk
+```{r}
+buat_pie_3wilayah("Jumlah Penduduk (Ribu)")
+```
+
+#### Dari visualisasi Pie Chart diatas, menunjukkan bahwa Jumlah Penduduk di Indonesia pada tahun 2024 paling banyak ada di Pulau Jawa, yaitu sebanyak 55,7%
+
+### Pie Chart: Pertumbuhan Penduduk
+```{r}
+buat_pie_3wilayah("Laju Pertumbuhan Penduduk per Tahun")
+```
+
+#### Dari visualisasi Pie Chart diatas, menunjukkan Pertumbuhan Penduduk di Indonesia pada tahun 2024 paling banyak ada di Luar Pulau Jawa, yaitu sebanyak 62,6%
+
+### Pie Chart: Kepadatan Penduduk
+```{r}
+buat_pie_3wilayah("Kepadatan Penduduk per km persegi (Km2)")
+```
+
+#### Dari visualisasi Pie Chart diatas, menunjukkan bahwa Kepadatan Penduduk di Indonesia pada tahun 2024 paling banyak ada di Pulau Jawa, yaitu sebanyak 85,4%
+
+### Pie Chart: Rasio Jenis Kelamin
+```{r}
+buat_pie_3wilayah("Rasio Jenis Kelamin Penduduk")
+```
+
+#### Dari visualisasi Pie Chart diatas, menunjukkan bahwa Rasio Jenis Kelamin di Indonesia pada tahun 2024 paling banyak ada di Luar Pulau Jawa, yaitu sebanyak 58,6%
+
+## BOX PLOT TIAP VARIABEL
+
+```{r}
+df <- data_penduduk
+```
+
+```{r}
+colnames(df)
+```
+
+### Box Plot: Jumlah Penduduk
+```{r}
+ggplot(df, aes(y = `Jumlah Penduduk (Ribu)`)) +
+  geom_boxplot(fill = "#ffb6c1", color = "black") +
+  labs(title = "Boxplot Jumlah Penduduk 2024", y = "Jumlah Penduduk (Ribu)", x = "") +
+  theme_minimal()
+```
+
+#### Berdasarkan hasil visualisasi Boxplot diatas, dapat dilihat bahwa terdapat 4 titik outlier yang menunjukkan bahwa adanya nilai yang sangat tinggi. Berarti terdapat provinsi berpenduduk padat, seperti Jawa Barat (50345,2), Jawa Timur (41814,5), Jawa Tengah (37892,3), dan Sumatera Utara (15588,5).
+
+### Box Plot: Pertumbuhan Penduduk
+```{r}
+ggplot(df, aes(y = `Laju Pertumbuhan Penduduk per Tahun`)) +
+  geom_boxplot(fill = "#ffb6c1", color = "black") +
+  labs(title = "Boxplot Pertumbuhan Penduduk 2024", y = "Pertumbuhan Penduduk", x = "") +
+  theme_minimal()
+```
+
+#### Berdasarkan hasil visualisasi Boxplot diatas, dapat dilihat bahwa terdapat 1 titik outlier diatas dan 3 titik outlier dibawah(rendah) yang menunjukkan bahwa sebagian besar provinsi mengalami Pertumbuhan Penduduk yang relatif stabil. Outlier rendah menunjukkan provinsi dengan pertumbuhan lambat, bisa disebabkan migrasi keluar atau angka kelahiran rendah. Sedangkan, Outlier tinggi menunjukkan wilayah dengan pertumbuhan cepat, bisa dipengaruhi urbanisasi atau angka kelahiran tinggi.Secara keseluruhan, Laju pertumbuhan penduduk Indonesia tahun 2024 relatif terkendali dan homogen, meskipun tetap ada beberapa wilayah dengan kondisi ekstrem.
+
+### Box Plot: Kepadatan Penduduk
+```{r}
+ggplot(df, aes(y = `Kepadatan Penduduk per km persegi (Km2)`)) +
+  geom_boxplot(fill = "#ffb6c1", color = "black") +
+  labs(title = "Boxplot Kepadatan Penduduk per km persegi (Km2)", y = "Kepadatan Penduduk", x = "") +
+  theme_minimal()
+```
+
+#### Berdasarkan hasill visualisasi Boxplot diatas, menunjukkan bahwa terdapat titik-titik outlier yang berarti menunjukkan wilayah dengan kepadatan sangat tinggi, biasanya daerah perkotaan atau provinsi kecil dengan populasi yang besar. Secara keseluruhan, Kepadatan penduduk di Indonesia sangat timpang, dengan sebagian besar wilayah berpenduduk jarang dan hanya sedikit wilayah yang sangat padat.
+
+### Box Plot: Rasio Jenis Kelamin
+```{r}
+ggplot(df, aes(y = `Rasio Jenis Kelamin Penduduk`)) +
+  geom_boxplot(fill = "#ffb6c1", color = "black") +
+  labs(title = "Boxplot Rasio Jenis Kelamin Penduduk 2024", y = "Rasio Jenis Kelamin", x = "") +
+  theme_minimal()
+```
+
+#### Berdasarkan hasil Boxplot diatas, menunjukkan bahwa terdapat 2 titik outlier (atas) yang mengindikasikan provinsi tertentu dengan dominasi penduduk laki-laki, yang bisa dipengaruhi faktor migrasi tenaga kerja atau karakteristik wilayah. Secara keseluruhan, distribusi rasio jenis kelamin di Indonesia cukup stabil, tanpa ketimpangan ekstrem, meskipun terdapat beberapa wilayah dengan rasio yang menyimpang dari rata-rata nasional
+
+## SCATTERPLOT TIAP VARIABEL
+### ScatterPlot Pertumbuhan Penduduk vs Jumlah Penduduk
+```{r}
+ggplot(df, 
+       aes(x = `Laju Pertumbuhan Penduduk per Tahun`, y = `Jumlah Penduduk (Ribu)`)) +
+  geom_point(color = "#ffb6c1", size = 3) +  
+  geom_smooth(method = "lm", se = FALSE, color = "#ff69b4") + 
+  labs(
+    title = "Hubungan Pertumbuhan Penduduk dan Jumlah Penduduk",
+    subtitle = "Sumber: Data BPS",
+    x = "Pertumbuhan Penduduk",
+    y = "Jumlah Penduduk (Ribu)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", color = "#cc3366", size = 14),
+    plot.subtitle = element_text(color = "gray40"),
+    axis.title = element_text(color = "#cc3366"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+#### Berdasarkan hasil visualisasi scatterplot antara pertumbuhan penduduk dan jumlah penduduk, terlihat adanya hubungan negatif yang ditunjukkan oleh garis tren yang menurun. Hal ini mengindikasikan bahwa provinsi dengan jumlah penduduk yang besar cenderung memiliki laju pertumbuhan penduduk yang lebih rendah, sedangkan provinsi dengan jumlah penduduk relatif kecil justru menunjukkan tingkat pertumbuhan yang lebih tinggi. Kondisi ini dapat dijelaskan karena wilayah dengan populasi besar umumnya telah mencapai tingkat kepadatan tertentu sehingga pertumbuhannya melambat, sementara wilayah dengan populasi kecil masih memiliki ruang untuk pertumbuhan penduduk yang lebih cepat.
+
+### ScatterPlot Kepadatan Penduduk vs Jumlah Penduduk
+```{r}
+ggplot(df, 
+       aes(x = `Kepadatan Penduduk per km persegi (Km2)`, y = `Jumlah Penduduk (Ribu)`)) +
+  geom_point(color = "#ffb6c1", size = 3) +  
+  geom_smooth(method = "lm", se = FALSE, color = "#ff69b4") + 
+  labs(
+    title = "Hubungan Kepadatan Penduduk dan Jumlah Penduduk",
+    subtitle = "Sumber: Data BPS",
+    x = "Kepadatan Penduduk",
+    y = "Jumlah Penduduk (Ribu)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", color = "#cc3366", size = 14),
+    plot.subtitle = element_text(color = "gray40"),
+    axis.title = element_text(color = "#cc3366"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+#### Hasil scatterplot antara kepadatan penduduk dan jumlah penduduk menunjukkan adanya hubungan positif, yang ditandai dengan arah garis tren yang meningkat. Artinya, provinsi dengan kepadatan penduduk yang lebih tinggi cenderung memiliki jumlah penduduk yang lebih besar. Meskipun demikian, sebaran data yang cukup lebar mengindikasikan bahwa hubungan ini tidak bersifat mutlak. Faktor lain seperti luas wilayah administrasi dan tingkat urbanisasi turut memengaruhi jumlah penduduk, sehingga terdapat provinsi dengan kepadatan rendah namun memiliki jumlah penduduk yang cukup besar.
+
+
+### ScatterPlot Rasio Jenis Kelamin vs Jumlah Penduduk
+```{r}
+ggplot(df, 
+       aes(x = `Rasio Jenis Kelamin Penduduk`, y = `Jumlah Penduduk (Ribu)`)) +
+  geom_point(color = "#ffb6c1", size = 3) +  
+  geom_smooth(method = "lm", se = FALSE, color = "#ff69b4") + 
+  labs(
+    title = "Hubungan Rasio Jenis Kelamin Penduduk dan Jumlah Penduduk",
+    subtitle = "Sumber: Data BPS",
+    x = "Rasio Jenis Kelamin",
+    y = "Jumlah Penduduk (Ribu)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", color = "#cc3366", size = 14),
+    plot.subtitle = element_text(color = "gray40"),
+    axis.title = element_text(color = "#cc3366"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+#### Scatterplot antara rasio jenis kelamin dan jumlah penduduk memperlihatkan hubungan negatif yang lemah. Garis tren yang menurun menunjukkan bahwa peningkatan rasio jenis kelamin tidak diikuti oleh peningkatan jumlah penduduk secara signifikan. Hal ini menandakan bahwa rasio jenis kelamin bukan merupakan faktor utama dalam menentukan besar kecilnya jumlah penduduk suatu provinsi. Faktor demografis lain seperti angka kelahiran, migrasi penduduk, dan kondisi sosial ekonomi memiliki pengaruh yang lebih dominan terhadap jumlah penduduk dibandingkan komposisi jenis kelamin.
+
+
+# 5. Hierarchical Clustering
+## A. Persiapan Data
+
+```{r}
+#data frame dan set rownames
+df_clustering <- as.data.frame(df)
+rownames(df_clustering) <- df_clustering$Provinsi
+```
+
+#### Pada tahap ini, data kependudukan diubah menjadi bentuk data frame agar mudah diproses dalam analisis clustering. Nama provinsi dijadikan sebagai row names, sehingga setiap baris data merepresentasikan satu provinsi. Hal ini bertujuan agar hasil clustering dan dendrogram dapat menampilkan nama provinsi secara jelas.
+
+```{r}
+head(df_clustering)
+```
+
+```{r}
+#Ambil kolom numerik saja (kolom 2-6)
+data_cluster <- df_clustering[, 2:6]
+head(data_cluster)
+```
+
+#### Selanjutnya, hanya variabel numerik yang digunakan dalam proses clustering, yaitu:
+#### a. Jumlah Penduduk
+#### b. Persentase Penduduk
+#### c. Laju Pertumbuhan Penduduk
+#### d. Kepadatan Penduduk
+#### e. Rasio Jenis Kelamin Penduduk
+#### Pemilihan variabel numerik ini penting karena perhitungan jarak dalam clustering hanya dapat dilakukan pada data berbentuk angka.
+
+## B. Standarisasi Data
+```{r}
+data_scaled <- scale(data_cluster)
+rownames(data_scaled) <- rownames(df_clustering)
+
+print(data_scaled)
+```
+
+#### Standarisasi data dilakukan untuk menyamakan skala antarvariabel. Hal ini penting karena setiap variabel memiliki satuan dan rentang nilai yang berbeda, misalnya Jumlah penduduk bernilai sangat besar atau Rasio jenis kelamin bernilai relatif kecil. Dengan standarisasi (mean = 0 dan standar deviasi = 1), setiap variabel memiliki bobot yang sama dalam menentukan pembentukan klaster, sehingga tidak ada variabel yang mendominasi hasil clustering.
+
+## C. Menghitung Jarak Euclidean
+```{r}
+jarak <- dist(data_scaled, method = "euclidean")
+
+print(jarak)
+```
+
+#### Tahap ini menghitung jarak Euclidean antarprovinsi berdasarkan data yang telah distandarisasi. Jarak Euclidean digunakan untuk mengukur tingkat kemiripan atau perbedaan karakteristik kependudukan antarprovinsi. Semakin kecil jarak antarprovinsi, maka semakin mirip karakteristik kependudukannya.
+
+## D. Hierarchical Clustering dengan Metode Complete Linkage
+```{r}
+hc <- hclust(jarak, method = "complete")
+```
+
+#### Proses clustering dilakukan menggunakan metode complete linkage, yaitu  metode hierarchical clustering yang menentukan jarak antar klaster berdasarkan jarak terjauh antar anggotanya, sehingga klaster yang terbentuk cenderung lebih homogen.
+
+## E. Plot Dendogram
+
+```{r}
+library(dendextend)
+library(factoextra)
+
+# potong cluster
+cluster <- cutree(hc, k = 4)
+
+# ubah ke dendrogram
+dend <- as.dendrogram(hc)
+
+# reorder berdasarkan cluster
+dend <- reorder(dend, wts = cluster)
+
+# plot dendrogram 
+suppressWarnings({
+  fviz_dend(dend,
+            k = 4,
+            rect = TRUE,
+            rect_border = "pink",
+            rect_fill = FALSE,
+            cex = 0.5,
+            horiz = TRUE,
+            main = "Dendrogram Hierarchical Clustering Provinsi Indonesia 2024")
+})
+
+```
+
+### Cluster 1 
+#### Cluster 1 hanya terdiri dari Provinsi DKI Jakarta, yang menunjukkan bahwa karakteristik kependudukan DKI Jakarta sangat berbeda dibandingkan provinsi lain di Indonesia. DKI Jakarta memiliki kepadatan penduduk yang sangat tinggi, jumlah penduduk besar pada wilayah yang relatif kecil, serta tingkat urbanisasi yang ekstrem. Kondisi ini menyebabkan DKI Jakarta membentuk klaster tersendiri karena jarak kemiripannya dengan provinsi lain cukup jauh dalam analisis hierarchical clustering. Hal ini mencerminkan peran DKI Jakarta sebagai pusat pemerintahan, ekonomi, dan aktivitas sosial nasional yang memiliki tekanan kependudukan paling tinggi.
+
+### Cluster 2
+#### Cluster 2 terdiri dari Provinsi Jawa Timur, Jawa Tengah, dan Jawa Barat. Provinsi-provinsi dalam klaster ini memiliki jumlah penduduk yang sangat besar, namun dengan karakteristik kepadatan dan persebaran penduduk yang lebih beragam dibandingkan DKI Jakarta. Meskipun sama-sama berada di Pulau Jawa, ketiga provinsi ini memiliki wilayah administratif yang lebih luas sehingga kepadatan penduduknya relatif lebih rendah dibandingkan DKI Jakarta. Kesamaan karakteristik tersebut menyebabkan ketiga provinsi ini tergabung dalam satu klaster, yang mencerminkan wilayah dengan konsentrasi penduduk tinggi serta aktivitas ekonomi dan sosial yang intens.
+
+### Cluster 3
+#### Cluster 3 mencakup Aceh, Sumatera Barat, Jambi, serta beberapa provinsi lain yang memiliki karakteristik kependudukan relatif mirip. Provinsi-provinsi dalam klaster ini umumnya memiliki jumlah penduduk sedang, kepadatan penduduk menengah hingga rendah, serta laju pertumbuhan penduduk yang relatif stabil. Wilayah dalam cluster ini sebagian besar berada di luar Pulau Jawa dan tidak mengalami tekanan kependudukan setinggi provinsi-provinsi di Pulau Jawa. Pola ini menunjukkan bahwa cluster 3 merepresentasikan wilayah dengan struktur kependudukan yang lebih seimbang dan persebaran penduduk yang tidak terlalu terkonsentrasi.
+
+### Cluster 4
+#### Cluster 4 terdiri dari Papua Selatan, Papua, Papua Barat, Papua Barat Daya, Papua Pegunungan, Papua Tengah, Kalimantan Tengah, Kalimantan Timur, dan Kalimantan Utara. Klaster ini ditandai oleh kepadatan penduduk yang sangat rendah, wilayah geografis yang luas, serta jumlah penduduk yang relatif kecil dibandingkan luas wilayahnya. Provinsi-provinsi dalam cluster ini umumnya memiliki tantangan dalam pemerataan pembangunan dan akses infrastruktur. Jarak penggabungan yang relatif besar dalam dendrogram menunjukkan bahwa karakteristik kependudukan cluster ini cukup berbeda dibandingkan cluster lainnya, sehingga membentuk kelompok tersendiri dalam analisis.
+
+### Kesimpulan
+#### Pembagian data ke dalam empat cluster dilakukan berdasarkan hasil analisis hierarchical clustering yang ditampilkan melalui dendrogram. Empat(4) cluster dipilih karena merupakan titik pemotongan dendrogram yang menghasilkan perbedaan karakteristik paling jelas antar kelompok tanpa mengurangi kemudahan interpretasi hasil. Pada dendrogram terlihat adanya lonjakan jarak (height) yang cukup signifikan sebelum penggabungan klaster menjadi lebih sedikit. Pemotongan dendrogram pada tingkat tersebut menghasilkan empat kelompok yang memiliki perbedaan karakteristik kependudukan yang jelas antar klaster, namun kemiripan yang tinggi di dalam klaster. Selain itu, pembagian menjadi empat cluster dinilai paling optimal karena mampu membedakan provinsi dengan karakteristik ekstrem, seperti DKI Jakarta, provinsi-provinsi di Pulau Jawa, wilayah luar Jawa dengan karakteristik sedang, serta wilayah dengan kepadatan penduduk sangat rendah seperti Papua dan Kalimantan, tanpa menghasilkan klaster yang terlalu banyak atau terlalu sedikit.
